@@ -43,7 +43,7 @@ gngm_analyzer=Agent(
 gngm_analysis_task=Task(
     description="Analyze the token data {data} and provide insights based on key metrics.",
     agent=gngm_analyzer,
-    goal="Provide a brief analysis of the token data {data}, and give forcast on whether it is a good investment or not. Do not suggest any recommendations.",
+    goal="Provide me with a one line suggestion on whether the token is a good investment or not. Do not suggest any recommendations.",
     expected_output="gmgn_analysis.md"
 )
 

@@ -3,6 +3,7 @@ import os
 import google.generativeai as genai
 from crawl4ai import AsyncWebCrawler, BrowserConfig, CrawlerRunConfig, CacheMode
 from dotenv import load_dotenv
+import json
 
 load_dotenv()
 
@@ -56,10 +57,10 @@ async def crawl_gmgn(url):
             Raw Data:
             {data}
 
-            Format the response as a clean JSON object without any markdown formatting or additional headers or ```json```. Include all available metrics and insights from the provided data.
+            Format the response as a clean JSON object without any markdown formatting or additional headers or ```json```. Include all available metrics and insights from the provided data and return the response in json format.
             """
 
-            print(prompt.format(data=str(result.markdown)))
+            # print(prompt.format(data=str(result.markdown)))
 
             response = chat_session.send_message(prompt.format(data=str(result)))
 

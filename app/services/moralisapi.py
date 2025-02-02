@@ -52,8 +52,8 @@ class TokenData(BaseModel):
     buyers: Volume
     sellers: Volume
 
-def fetch_token_price(token_address)->TokenData :
-    url = f"https://deep-index.moralis.io/api/v2.2/pairs/{token_address}/stats?chain=base"
+def fetch_token_price(pairAddress)->TokenData :
+    url = f"https://deep-index.moralis.io/api/v2.2/pairs/{pairAddress}/stats?chain=base"
     
     headers = {
         "Accept": "application/json",

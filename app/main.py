@@ -1,8 +1,5 @@
 from fastapi import FastAPI, HTTPException
-from core.agentic_ai import AgenticAI
-from services.coin_api import validate_coin, CoinInfo
-from services.social_api import get_reddit_sentiment, RedditSentimentResponse
-from services.dex_api import get_dex_data
+
 import operator
 
 # from models.forecasting import Prediction
@@ -17,13 +14,11 @@ from services.twitter_api import (
 )
 from dotenv import load_dotenv
 from services.gemini import analyze_gmgn_data
-from pydantic import BaseModel
+from models import LiquidityPool, WhaleTransaction, DexAnalyticsResponse, FeatureEngineering, BlockchainRecognition, AISignalsResponse, AlertThreshold, RiskAssessmentResponse, HistoricalResponse, CombinedTokenData
 from services.gmgncrawler import crawl_gmgn
 import os
 import json
-
-from typing import List
-from services.deepseek import get_deepseek_completion
+from typing import Optional, List
 
 app = FastAPI()
 load_dotenv()
@@ -115,9 +110,6 @@ async def analyze_token_price(token_pair_address: str):
         raise HTTPException(status_code=400, detail=price_data["error"])
     price_analysis=crew.kickoff(inputs={"data":price_data})
     return price_analysis
-
-from typing import Optional
-
 
 class DevWalletStatus(BaseModel):
     balance: str
@@ -214,90 +206,6 @@ async def search_tweets_endpoint(
     analysis_result=twitter_crew.kickoff(inputs={"data":tweets_json})
     return analysis_result
 
-
-# --- Pydantic Models ---
-class LiquidityPool(BaseModel):
-    platform: str
-    pair: str
-    liquidity: float
-    change: float
-
-
-class WhaleTransaction(BaseModel):
-    address: str
-    amount: float
-    asset: str
-    time_ago: str
-
-
-class DexAnalyticsResponse(BaseModel):
-    total_dex_volume: float
-    dex_volume_change: float
-    total_liquidity: float
-    liquidity_change: float
-    unique_traders: int
-    traders_change: float
-    liquidity_pool: List[LiquidityPool]
-    whale_transactions: List[WhaleTransaction]
-
-
-class FeatureEngineering(BaseModel):
-    name: str
-    weight: int
-    color: str
-    value: int
-
-
-class BlockchainRecognition(BaseModel):
-    name: str
-    timeFrame: str
-    riskColor: str
-    riskLevel: str
-    riskPercentage: int
-
-
-class AlertThreshold(BaseModel):
-    name: str
-    status: str
-    color: str
-    bgColor: str
-
-
-class AISignalsResponse(BaseModel):
-    strength: str
-    confidence: int
-    pattern: str
-    patternPhase: str
-    prediction: str
-    forecast: str
-    featureEngineering: List[FeatureEngineering]
-    blockchainRecognition: List[BlockchainRecognition]
-    alertThresholds: List[AlertThreshold]
-
-
-class RiskAssessmentResponse(BaseModel):
-    sectionId: str
-    overallRiskScore: str
-    riskLevel: str
-    smartContractSafetyPercentage: int
-    smartContractStatus: str
-    liquidityLockStatus: str
-    liquidityLockRemainingDays: int
-    ownershipStatus: str
-    ownershipStatusDescription: str
-    mintFunctionStatus: str
-    mintFunctionDescription: str
-    transferRestrictions: str
-    transferRestrictionsDescription: str
-    liquidityRisk: str
-    liquidityRiskPercentage: int
-    concentrationRisk: str
-    concentrationRiskPercentage: int
-    smartContractRisk: str
-    smartContractRiskPercentage: int
-
-
-class HistoricalResponse(BaseModel):
     roi: int
     pumpPatterns: int
     averagePumpReturn: int
@@ -308,7 +216,6 @@ class HistoricalResponse(BaseModel):
     triggeredChange: int
     successRate: int
     responseTime: float
-
 
 # --- FastAPI Endpoints ---
 
@@ -471,31 +378,6 @@ async def get_historical_data(coinAddress: str, pairAddress: str):
     }
 
 
-class ChatMessage(BaseModel):
-    role: str
-    content: str
-
-
-class ChatRequest(BaseModel):
-    messages: List[ChatMessage]
-    temperature: float = 1.0
-    max_tokens: int = 1024
-
-
-@app.post("/chat")
-async def chat_completion(request: ChatRequest):
-    try:
-        messages = [{"role": msg.role, "content": msg.content} for msg in request.messages]
-        response = await get_deepseek_completion(
-            messages=messages,
-            temperature=request.temperature,
-            max_tokens=request.max_tokens
-        )
-        return {"response": response}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-
 @app.post("/aggregate-analysis")
 async def aggregate_analysis(token_pair_address: str, token_address: str, query: str, search_type: SearchType = SearchType.TOP, max_tweets: int = 10):
     # Call analyze_token_price
@@ -515,101 +397,6 @@ async def aggregate_analysis(token_pair_address: str, token_address: str, query:
     }
     predict_output=predict_crew.kickoff(inputs={"data":combined_output})
     return predict_output
-
-
-# --- Pydantic Models ---
-class LiquidityPool(BaseModel):
-    platform: str
-    pair: str
-    liquidity: float
-    change: float
-
-class WhaleTransaction(BaseModel):
-    address: str
-    amount: float
-    asset: str
-    time_ago: str
-
-class DexAnalyticsResponse(BaseModel):
-    total_dex_volume: float
-    dex_volume_change: float
-    total_liquidity: float
-    liquidity_change: float
-    unique_traders: int
-    traders_change: float
-    liquidity_pool: List[LiquidityPool]
-    whale_transactions: List[WhaleTransaction]
-
-class FeatureEngineering(BaseModel):
-    name: str
-    weight: int
-    color: str
-    value: int
-
-class BlockchainRecognition(BaseModel):
-    name: str
-    timeFrame: str
-    riskColor: str
-    riskLevel: str
-    riskPercentage: int
-
-class AlertThreshold(BaseModel):
-    name: str
-    status: str
-    color: str
-    bgColor: str
-
-class AISignalsResponse(BaseModel):
-    strength: str
-    confidence: int
-    pattern: str
-    patternPhase: str
-    prediction: str
-    forecast: str
-    featureEngineering: List[FeatureEngineering]
-    blockchainRecognition: List[BlockchainRecognition]
-    alertThresholds: List[AlertThreshold]
-
-class RiskAssessmentResponse(BaseModel):
-    sectionId: str
-    overallRiskScore: str
-    riskLevel: str
-    smartContractSafetyPercentage: int
-    smartContractStatus: str
-    liquidityLockStatus: str
-    liquidityLockRemainingDays: int
-    ownershipStatus: str
-    ownershipStatusDescription: str
-    mintFunctionStatus: str
-    mintFunctionDescription: str
-    transferRestrictions: str
-    transferRestrictionsDescription: str
-    liquidityRisk: str
-    liquidityRiskPercentage: int
-    concentrationRisk: str
-    concentrationRiskPercentage: int
-    smartContractRisk: str
-    smartContractRiskPercentage: int
-
-class HistoricalResponse(BaseModel):
-    roi: int
-    pumpPatterns: int
-    averagePumpReturn: int
-    recoveryTime: int
-    activeAlerts: int
-    highPriority: int
-    triggeredToday: int
-    triggeredChange: int
-    successRate: int
-    responseTime: float
-
-class CombinedTokenData(BaseModel):
-    token_price_data: dict
-    gmgn_info: dict
-    dex_analytics: DexAnalyticsResponse
-    ai_signals: AISignalsResponse
-    risk_assessment: RiskAssessmentResponse
-    historical_data: HistoricalResponse
 
 # --- FastAPI Endpoint ---
 @app.get("/combined-token-data", response_model=CombinedTokenData)

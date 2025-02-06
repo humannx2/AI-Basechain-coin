@@ -1,7 +1,9 @@
 from groq import Groq
 from typing import List, Dict, Any
+import os
 
-client = Groq(api_key="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")
+api_key=os.environ("GROQ_API_KEY")
+client = Groq(api_key=api_key)
 
 async def get_deepseek_completion(messages: List[Dict[str, str]], temperature: float = 1, max_tokens: int = 1024) -> str:
     """

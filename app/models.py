@@ -1,20 +1,44 @@
-from pydantic import BaseModel
-from typing import List
+from pydantic import BaseModel, HttpUrl
+from typing import List, Dict, Any
+from datetime import datetime
 
 
-# --- Pydantic Models ---
+
+
 class LiquidityPool(BaseModel):
-
-    platform: str
-    pair: str
-    liquidity: float
-    change: float
+    pairAddress: str
+    totalLiquidityUsd: float
 
 class WhaleTransaction(BaseModel):
-    address: str
-    amount: float
-    asset: str
-    time_ago: str
+    transactionType: str  # "buy" or "sell"
+    amountUsd: float
+
+class TokenData(BaseModel):
+    tokenAddress: str
+    tokenName: str
+    tokenSymbol: str
+    tokenLogo: HttpUrl
+    pairCreated: datetime
+    pairLabel: str
+    pairAddress: str
+    exchange: str
+    exchangeAddress: str
+    exchangeLogo: HttpUrl
+    exchangeUrl: HttpUrl
+    currentUsdPrice: float
+    currentNativePrice: float
+    totalLiquidityUsd: float
+    pricePercentChange: Dict[str, Any]
+    liquidityPercentChange: Dict[str, Any]
+    buys: Dict[str, Any]
+    sells: Dict[str, Any]
+    totalVolume: Dict[str, Any]
+    buyVolume: Dict[str, Any]
+    sellVolume: Dict[str, Any]
+    buyers: Dict[str, Any]
+    sellers: Dict[str, Any]
+
+# --- Pydantic Models ---
 
 class DexAnalyticsResponse(BaseModel):
     total_dex_volume: float

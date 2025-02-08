@@ -14,7 +14,7 @@ from services.twitter_api import (
 )
 from dotenv import load_dotenv
 from services.gemini import analyze_gmgn_data
-from models import LiquidityPool, WhaleTransaction, DexAnalyticsResponse, FeatureEngineering, BlockchainRecognition, AISignalsResponse, AlertThreshold, RiskAssessmentResponse, HistoricalResponse, CombinedTokenData
+from models import LiquidityPool, WhaleTransaction, DexAnalyticsResponse, FeatureEngineering, BlockchainRecognition, AISignalsResponse, AlertThreshold, RiskAssessmentResponse, HistoricalResponse, CombinedTokenData, TokenData
 from services.gmgncrawler import crawl_gmgn
 import os
 import json
@@ -24,72 +24,38 @@ app = FastAPI()
 load_dotenv()
 
 
-class PricePercentChange(BaseModel):
-    "Percentage change in price for different time intervals."
-    _5min: float
-    _1h: float
-    _4h: float
-    _24h: float
-
-
-class LiquidityPercentChange(BaseModel):
-    "Percentage change in liquidity for different time intervals."
-    _5min: float
-    _1h: float
-    _4h: float
-    _24h: float
-
-
-class VolumeData(BaseModel):
-    "Volume data for a specific time period."
-    _5min: float
-    _1h: float
-    _4h: float
-    _24h: float
-
-
-class TransactionData(BaseModel):
-    "Data for buys and sells over different time intervals."
-    _5min: int
-    _1h: int
-    _4h: int
-    _24h: int
-
-
-class TokenPriceData(BaseModel):
-    "Main model for token price and other statistics."
-    tokenAddress: str
-    tokenName: str
-    tokenSymbol: str
-    tokenLogo: str
-    pairCreated: str
-    pairLabel: str
-    pairAddress: str
-    exchange: str
-    exchangeAddress: str
-    exchangeLogo: str
-    exchangeUrl: str
-    currentUsdPrice: str
-    currentNativePrice: str
-    totalLiquidityUsd: float
-    pricePercentChange: PricePercentChange
-    liquidityPercentChange: LiquidityPercentChange
-    buys: TransactionData
-    sells: TransactionData
-    totalVolume: VolumeData
-    buyVolume: VolumeData
-    sellVolume: VolumeData
-    buyers: VolumeData
-    sellers: VolumeData
-
-
-
-@app.get("/token-price",response_model=TokenPriceData)
+@app.get("/token-price", response_model=DexAnalyticsResponse)
 def get_token_price(pairAddress: str):
     price_data = fetch_token_price(pairAddress)
     if "error" in price_data:
         raise HTTPException(status_code=400, detail=price_data["error"])
-    return price_data
+    token_data = TokenData(**price_data)
+    return calculate_dex_analytics(token_data)
+
+
+def calculate_dex_analytics(token_data: TokenData) -> DexAnalyticsResponse:
+    total_dex_volume = sum(token_data.totalVolume.values())
+    dex_volume_change = token_data.pricePercentChange.get("24h", 0.0)
+    total_liquidity = token_data.totalLiquidityUsd
+    liquidity_change = token_data.liquidityPercentChange.get("24h", 0.0)
+    unique_traders = len(set(token_data.buyers.keys()).union(set(token_data.sellers.keys())))
+    traders_change = ((len(token_data.buyers) + len(token_data.sellers)) / unique_traders) if unique_traders else 0.0
+    liquidity_pool = [LiquidityPool(pairAddress=token_data.pairAddress, totalLiquidityUsd=token_data.totalLiquidityUsd)]
+    whale_transactions = [
+        WhaleTransaction(transactionType="buy", amountUsd=amount) for amount in token_data.buyVolume.values() if amount > 10000
+    ] + [
+        WhaleTransaction(transactionType="sell", amountUsd=amount) for amount in token_data.sellVolume.values() if amount > 10000
+    ]
+    return DexAnalyticsResponse(
+        total_dex_volume=total_dex_volume,
+        dex_volume_change=dex_volume_change,
+        total_liquidity=total_liquidity,
+        liquidity_change=liquidity_change,
+        unique_traders=unique_traders,
+        traders_change=traders_change,
+        liquidity_pool=liquidity_pool,
+        whale_transactions=whale_transactions
+    )
 
 
 @app.post("/analyze-token-price")

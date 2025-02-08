@@ -1,5 +1,5 @@
 from fastapi import FastAPI, HTTPException
-
+from pydantic import BaseModel
 import operator
 
 # from models.forecasting import Prediction
@@ -18,20 +18,10 @@ from models import LiquidityPool, WhaleTransaction, DexAnalyticsResponse, Featur
 from services.gmgncrawler import crawl_gmgn
 import os
 import json
-from typing import Optional, List
+from typing import Optional, List, Dict
 
 app = FastAPI()
 load_dotenv()
-
-
-# @app.get("/validate-coin", response_model=CoinInfo)
-# async def validate_coin_endpoint(symbol: str):
-#     coin_info = await validate_coin(symbol)
-#     return coin_info
-    # sentiment = await get_reddit_sentiment(symbol)
-    # return sentiment
-
-from typing import Dict
 
 
 class PricePercentChange(BaseModel):
@@ -111,53 +101,53 @@ async def analyze_token_price(token_pair_address: str):
     price_analysis=crew.kickoff(inputs={"data":price_data})
     return price_analysis
 
-class DevWalletStatus(BaseModel):
-    balance: str
-    status: str
+# class DevWalletStatus(BaseModel):
+#     balance: str
+#     status: str
 
 
-class SniperActivity(BaseModel):
-    sniper_count: int
-    total_transactions: int
+# class SniperActivity(BaseModel):
+#     sniper_count: int
+#     total_transactions: int
 
 
-class RiskAssessmentScore(BaseModel):
-    honeypot_is: str
-    gopluslabs: str
+# class RiskAssessmentScore(BaseModel):
+#     honeypot_is: str
+#     gopluslabs: str
 
 
-class SecurityAnalysis(BaseModel):
-    contract_verification_status: str
-    honeypot_check_results: str
-    buy_tax: float
-    sell_tax: float
-    risk_assessment_score: RiskAssessmentScore
-    renounced_status: str
-    liquidity_locked: str
+# class SecurityAnalysis(BaseModel):
+#     contract_verification_status: str
+#     honeypot_check_results: str
+#     buy_tax: float
+#     sell_tax: float
+#     risk_assessment_score: RiskAssessmentScore
+#     renounced_status: str
+#     liquidity_locked: str
 
 
-class TopHoldersAnalysis(BaseModel):
-    top_10_holder_percentage: float
-    dev_wallet_status: DevWalletStatus
-    dev_wallet_transactions: str
-    sniper_activity: SniperActivity
-    blue_chip_holder_percentage: float
+# class TopHoldersAnalysis(BaseModel):
+#     top_10_holder_percentage: float
+#     dev_wallet_status: DevWalletStatus
+#     dev_wallet_transactions: str
+#     sniper_activity: SniperActivity
+#     blue_chip_holder_percentage: float
 
 
-class AdditionalInformation(BaseModel):
-    name: str
-    symbol: str
-    price: float
-    market_cap: int
-    _24h_volume: int
-    total_supply: int
-    circulating_supply: int
-    holders: int
-    pair_address: str
-    pool_created: str
+# class AdditionalInformation(BaseModel):
+#     name: str
+#     symbol: str
+#     price: float
+#     market_cap: int
+#     _24h_volume: int
+#     total_supply: int
+#     circulating_supply: int
+#     holders: int
+#     pair_address: str
+#     pool_created: str
 
 
-class CryptoAnalysisResponse(BaseModel):
+# class CryptoAnalysisResponse(BaseModel):
     top_holders_analysis: TopHoldersAnalysis
     security_analysis: SecurityAnalysis
     additional_information: AdditionalInformation
@@ -170,7 +160,8 @@ async def get_gmgn_token_info(tokenAddress: str):
     url = operator.concat(base_url, tokenAddress)
     response = await crawl_gmgn(url)
     if response is None:
-        raise HTTPException(status_code=400, detail="Error fetching GMGN data")    
+        raise HTTPException(status_code=400, detail="Error fetching GMGN data") 
+    # return response
     gmgn_analysis = gngm_crew.kickoff(inputs={"data": response})
     return gmgn_analysis.raw
 

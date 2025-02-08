@@ -1,8 +1,10 @@
 from pydantic import BaseModel
+from typing import List
 
 
 # --- Pydantic Models ---
 class LiquidityPool(BaseModel):
+
     platform: str
     pair: str
     liquidity: float
